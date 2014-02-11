@@ -53,16 +53,12 @@ then
  exit 2
 fi
 
-#Make new /tmp folder. If exists, append "_#"; # increments until it's unique.
-base="/tmp/$package"
-workDir="$base"
-i=0;
-while [ -e "$workDir" ]
-do
- workDir="$base"_$i
- i=`expr $i + 1`
-done
-mkdir "$workDir"
+#Make new /tmp folder.
+if ! workDir=$(mktemp -d /tmp/fkdep-XXXXXX)
+then
+ echo "Failed to create temp directory." 1>&2
+ exit 1
+fi
 
 subDir="$workDir/sub"
 mkdir "$subDir"
