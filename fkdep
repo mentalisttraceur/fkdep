@@ -52,26 +52,26 @@ fi
 
 if [ $# -ne 1 ] 
 then
- echo "Wrong number of parameters."
- echo "Usage: $0 [--hard VERSION] PACKAGE"
+ echo "Wrong number of parameters." 1>&2
+ echo "Usage: $0 [--hard VERSION] PACKAGE" 1>&2
  exit 1
 fi
 
 if [ "x$1" = x ]
 then
- echo "Package name should not be empty."
+ echo "Package name should not be empty." 1>&2
  exit 1
 fi
 
 if (printf "$package" | grep -o "[^a-z0-9+.-]")
 then
- echo "^ That character is illegal in a deb package name."
+ echo "^ That character is illegal in a deb package name." 1>&2
  exit 1
 fi
 
 if [ "$(dpkg -s "$package" 2> /dev/null | grep -o " installed")" = " installed" ]
 then
- printf "You already have a package named \"$package\" installed.\n"
+ printf "You already have a package named \"$package\" installed.\n" 1>&2
  exit 2
 fi
 
