@@ -1,31 +1,25 @@
 #!/bin/sh
 
-#dpkg -L
-
-#kchangelog()
-
-#Escape special chars that the Bourne shell interprets inside double-quotes.
-esc()                                                                       
-{                                                                           
- echo "$@" | sed 's/\\/\\\\/g;s/\$/\\\$/g;s/`/\\`/g;s/"/\\"/g'
-}
-
-
-#$(uniqueName )
-#mkdir
-
 if (echo "$1" | grep -o "[^a-z0-9+.-]")
 then
  echo "^ Sorry, that character is illegal in a deb package name."
  exit 1
 fi
 
+#Check for file existance. Is return value of 'dpkg -s' standardized?
+if dpkg -s "$1" > /dev/null 2>&1
+then
+ echo "You already have this package installed."
+ exit 2
+fi
+
 #Make new /tmp folder. If exists, append "_#"; # increments until it's unique.
 base="/tmp/fkdep_$1"
 workDir="$base"
 i=0;
-while [ -e "$name" ]
+while [ -e "$workDir" ]
 do
  workDir="$base"_$i
  i=`expr $i + 1`
 done
+mkdir "$workDir"
