@@ -44,7 +44,7 @@ PACKAGE=fkdep-$1
 
 if printf %s "$PACKAGE" | grep -o '[^a-z0-9+.-]'
 then
- printf "^ Illegal character(s) for a deb package name.\n"
+ printf '^ Illegal character(s) for a deb package name.\n'
  exit 1
 fi
 
@@ -54,16 +54,12 @@ then
  exit 2
 fi
 
-# Make new /tmp folder. If exists, append "_#"; # increments until it's unique.
-BASE=/tmp/$PACKAGE
-WORKDIR=$BASE
-I=0;
-while [ -e "$WORKDIR" ]
-do
- WORKDIR=$BASE\_$I
- I=$((I + 1))
-done
-mkdir "$WORKDIR"
+# Make new /tmp folder.
+if ! WORKDIR=`mktemp -d /tmp/"$PACKAGE".XXXXXX`
+then
+ printf 'Could not create temporary working directory.\n'
+ exit 3
+fi
 
 SUBDIR=$WORKDIR/sub
 mkdir "$SUBDIR"
@@ -114,7 +110,7 @@ tar -czf "$WORKDIR"/control.tar.gz .
 cd "$WORKDIR"
 rm -r "$SUBDIR"
 
-printf "2.0\n" > debian-binary
+printf '2.0\n' > debian-binary
 
 # Build .deb, emulating the common 'ar' format
 DEB=$PACKAGE.deb
@@ -122,7 +118,7 @@ touch "$DEB"
 # Grab current timestamp
 TIMESTAMP=`date +%s -r "$DEB"`
 
-printf "!<arch>\n" > $DEB
+printf '!<arch>\n' > $DEB
 arAddFile debian-binary
 arAddFile control.tar.gz
 arAddFile data.tar.gz
