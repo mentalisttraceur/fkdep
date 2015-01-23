@@ -1,6 +1,8 @@
 #!/bin/sh
-# fkdep 1.0.1
-# Copyright (C) Alexander Kozhevnikov 2015-01-21;
+# fkdep 1.1
+# Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-01-23;
+# First implementations of name_version_arch.deb naming, hard-faking, usage
+# text, and printing errors to stderr properly, copyright (C) hxka 2014-02-12;
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public Licence as published by
