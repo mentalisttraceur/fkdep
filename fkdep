@@ -1,6 +1,6 @@
 #!/bin/sh
-# fkdep 1.1
-# Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-01-23;
+# fkdep 1.2
+# Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-02-19;
 # First implementations of name_version_arch.deb naming, hard-faking, usage
 # text, and printing errors to stderr properly, copyright (C) hxka 2014-02-12;
 # 
@@ -65,7 +65,7 @@ do
  then
   printUsage
   exit 0
- elif [ x"$1" = x-H ]
+ elif [ x"$1" = x-H ] || [ x"$1" = x--hard ]
  then 
   HARD=true
   VERSION=$2
@@ -74,7 +74,7 @@ do
  then 
   HARD=true
   VERSION=${1#*=}
- elif [ x"$1" = x-s ]
+ elif [ x"$1" = x-s ] || [ x"$1" = x--section ]
  then
   SECTION=$2
   shift
