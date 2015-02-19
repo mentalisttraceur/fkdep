@@ -1,5 +1,5 @@
 #!/bin/sh
-# fkdep 1.2
+# fkdep 2.0
 # Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-02-19;
 # First implementations of name_version_arch.deb naming, hard-faking, usage
 # text, and printing errors to stderr properly, copyright (C) hxka 2014-02-12;
@@ -202,16 +202,6 @@ arAddFile data.tar.gz
 
 rm data.tar.gz control.tar.gz debian-binary
 
-# If root, install and cleanup, if not, point user to generated deb file.
-if [ `id -u` = 0 ]
-then
- dpkg -i "$DEB"
- cd /
- rm -r "$WORKDIR"
-else
- printf '%s\n' \
-  'Did not have root permissions, cannot install the deb file.' \
-  'You may install it manually instead, it is located at:' \
-  "$WORKDIR"/"$DEB"
-fi
+# Point user to generated deb file.
+printf '%s\n' "$WORKDIR"/"$DEB"
 return 0
