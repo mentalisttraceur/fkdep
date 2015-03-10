@@ -1,6 +1,6 @@
 #!/bin/sh
-# fkdep 2.0.2
-# Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-02-19;
+# fkdep 2.1.0
+# Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-03-09;
 # First implementations of name_version_arch.deb naming, hard-faking, usage
 # text, and printing errors to stderr properly, copyright (C) hxka 2014-02-12;
 # 
