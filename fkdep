@@ -48,7 +48,7 @@ arAddFile()
  cat $1 >> $DEB
 
  # File entries must be 2-byte aligned, newline padded.
- case `expr "$SIZE" % 2` in
+ case $((SIZE % 2)) in
  1)
   printf '\n' >> $DEB
  esac
