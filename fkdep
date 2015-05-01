@@ -1,5 +1,5 @@
 #!/bin/sh
-# fkdep 2.1.2
+# fkdep 2.1.3
 # Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-04-28;
 # First implementations of name_version_arch.deb naming, hard-faking, usage
 # text, and printing errors to stderr properly, copyright (C) hxka 2014-02-12;
@@ -29,7 +29,7 @@ err_subdir=4
 printUsage()
 {
  printf '%s\n' \
-  'Usage: '"$0"' [options] PACKAGE' \
+  'Usage: fkdep [options] PACKAGE' \
   'Options:' \
   ' -h, --help            Prints this message - all other arguments ignored.' \
   ' -s, --section=SECTION Specify the deb section for this package.' \
