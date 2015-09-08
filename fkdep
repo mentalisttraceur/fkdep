@@ -29,7 +29,7 @@ err_subdir=4
 printUsage()
 {
  printf '%s\n' \
-  'Usage: fkdep [options] PACKAGE' \
+  'Usage: fkdep [OPTION]... PACKAGE' \
   'Options:' \
   ' -h, --help            Prints this message - all other arguments ignored.' \
   ' -s, --section=SECTION Specify the deb section for this package.' \
