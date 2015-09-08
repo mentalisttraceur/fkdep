@@ -28,13 +28,14 @@ err_subdir=4
 
 printUsage()
 {
- printf '%s\n' \
-  'Usage: fkdep [OPTION]... PACKAGE' \
-  'Options:' \
-  ' -h, --help            Prints this message - all other arguments ignored.' \
-  ' -s, --section=SECTION Specify the deb section for this package.' \
-  ' -H, --hard=VERSION    Hard-fake a specific version (the output package' \
-  '                       will have to be named the same as the faked package)'
+ cat <<DELIM
+Usage: fkdep [OPTION]... PACKAGE
+Options:
+ -h, --help            Prints this message - all other arguments ignored.
+ -s, --section=SECTION Specify the deb section for this package.
+ -H, --hard=VERSION    Hard-fake a specific version (the output package will
+                       have to be named the same as the faked package)
+DELIM
 }
 
 # Function to add a file to a 'common' format 'ar' archive.
