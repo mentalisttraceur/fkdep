@@ -30,7 +30,9 @@ printUsage()
 {
  cat <<DELIM
 Usage: fkdep [OPTION]... PACKAGE
+
 Options:
+
  -h, --help            Print this message; ignore all other arguments.
  -s, --section=SECTION Specify the deb section for this package.
  -H, --hard=VERSION    Hard-fake a specific version (the output package will
