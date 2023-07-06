@@ -12,7 +12,7 @@ print_version()
 print_help()
 {
     printf '%s\n' \
-        'Create an empty .deb to fake-satisfy a package depedency.' \
+        'Create an empty .deb to fake-satisfy a package dependency.' \
         'If version is given, the created .deb has both the given' \
         'package name and version. If only package name is given,' \
         'the created .deb has a package name prefixed with "fkdep-"' \
