@@ -1,219 +1,222 @@
-#!/bin/sh
-# fkdep 2.1.3
-# Copyright (C) Alexander Kozhevnikov <mentalisttraceur@gmail.com> 2015-09-08;
-# First implementations of name_version_arch.deb naming, hard-faking, usage
-# text, and printing errors to stderr properly, copyright (C) hxka 2014-02-12;
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public Licence as published by
-# the Free Software Foundation, either version 3 of the licence or,
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for details.
-# 
-# You should've received a copy of the GNU General Public License
-# with this program. If not, see <http://www.gnu.org/licences/>,
-# or write to the Free Software Foundation, Inc.,
-# 59 Temple Place, Suite 330 Boston MA 02111-1307 USA.
+#!/bin/sh -
+# SPDX-License-Identifier: 0BSD
+# Copyright 2023 Alexander Kozhevnikov <mentalisttraceur@gmail.com>
 
-# Error return values.
-err_name=1
-err_version=2
-err_section=3 # Unused: couldn't find a spec for valid "[area/]section" syntax.
-err_workdir=4
-err_subdir=4
 
-printUsage()
+print_version()
 {
- cat <<DELIM
-Usage: fkdep [OPTION]... PACKAGE
-
-Options:
-
- -h, --help            Print this help text and exit.
- -s, --section=SECTION Specify the deb section for this package.
- -H, --hard=VERSION    Hard-fake a specific version (the output package will
-                       have to be named the same as the faked package).
-DELIM
+    printf '%s\n' 'fkdep 3.0.0-alpha'
 }
 
-# Function to add a file to a 'common' format 'ar' archive.
-# NO support for filenames longer than 16 characters; that is unneeded for deb.
-# Assumes $deb and $timestamp are within scope.
-arAddFile()
+
+print_help()
 {
- size=`ls -l $1|awk '{print $5}'`
-
- printf '%-16s%-12s0     0     100644  %-10s`\n' $1 $timestamp $size >> $deb
-
- cat $1 >> $deb
-
- # File entries must be 2-byte aligned, newline padded.
- case $((size % 2)) in
- 1)
-  printf '\n' >> $deb
- esac
+    printf '%s\n' \
+        'Create an empty .deb to fake-satisfy a package depedency.' \
+        'If version is given, the created .deb has both the given' \
+        'package name and version. If only package name is given,' \
+        'the created .deb has a package name prefixed with "fkdep-"' \
+        'and has the given package name in its "Provides" field.' \
+        '' \
+        'Usage:' \
+        '    fkdep [--section=<section>] <package> [<version>]' \
+        '    fkdep (--help | --version)' \
+        '' \
+        'Options:' \
+        '    -h --help               show this help text' \
+        '    -V --version            show version information' \
+        '    -s --section=<section>  change the section of the created' \
+        '                            package [default: metapackages]' \
+        '' \
+        'Errors:' \
+        '    need package argument' \
+        '    need section option argument' \
+        '    bad option: <option>' \
+        '    bad package name: <package>' \
+        '    bad version: <version>'
 }
 
-# Set default package parameters.
-hard=false
-version=1.0
+
+# Wrap a file with "common format" `ar` archive headers, so that
+# it can be added to the end of an `ar` archive by catenating.
+# (Filenames longer than 16 characters are not supported.)
+ar_add_file()
+{
+    filename=$1
+    timestamp=$2
+    size=`wc -c "$filename"` || return 1
+
+    printf '%-16s%-12s0     0     100644  %-10s`\n' \
+        "$filename" "$timestamp" "$size" || return 1
+
+    cat "$1" || return 1
+
+    # File entries must be 2-byte aligned, newline padded.
+    case $((size % 2)) in 1)
+        printf '\n' || return 1
+    esac
+}
+
+
+case $# in 0)
+    printf '%s\n' "$0: need package argument" 1>&2
+    exit 1
+esac
+
+
+# Defaults:
 section=metapackages
 
-until [ $# = 0 ]
-do
- case $1 in
- -h | --help)
-  printUsage
-  exit 0
- ;;
- -H | --hard)
-  hard=true
-  version=$2
-  shift
- ;;
- -H*)
-  hard=true
-  version=${1#-H}
- ;;
- --hard=*)
-  hard=true
-  version=${1#--hard=}
- ;;
- -s | --section)
-  section=$2
-  shift
- ;;
- -s*)
-  section=${1#-s}
- ;;
- --section=*)
-  section=${1#--section=}
- ;;
- *)
-  package_faked=$1
- esac
- shift
-done
 
-if ! printf %s "$package_faked" | grep -q '^[a-z0-9][a-z0-9+.-]\{1,\}$'
+case $1 in
+-h | --help)
+    print_help || exit 1
+    exit 0
+;;
+-V | --version)
+    print_version || exit 1
+    exit 0
+;;
+-s | --section)
+    case $# in 1)
+        printf '%s\n' "$0: need section option argument" 1>&2
+        exit 1
+    esac
+    section=$2
+    shift
+;;
+-s*)
+    section=${1#-s}
+;;
+--section=*)
+    section=${1#--section=}
+;;
+-*)
+    printf '%s\n' "$0: bad option: $1" 1>&2
+    exit 1
+esac
+shift
+
+
+case $# in
+0)
+    printf '%s\n' "$0: need package argument" 1>&2
+    exit 1
+;;
+1)
+    package_provided=$1
+    package_created=fkdep-$1
+    version=1.0
+;;
+2)
+    package_provided=$1
+    package_created=$1
+    version=$2
+;;
+3)
+    printf '%s\n' "$0: bad extra argument: $3" 1>&2
+    exit 1
+esac
+
+
+if ! printf %s "$package_provided" | grep -q '^[a-z0-9][a-z0-9+.-]\{1,\}$'
 then
- printf '"%s" is not a valid .deb package name.\n' "$package_faked" 1>&2
- exit $err_name
+    printf '%s\n' "$0: bad package name: $package_provided" 1>&2
+    exit 1
 fi
 
-# Debian has very specific version string requirements, and regex has no good
-# support for subsets/substrings being XOR with other subsets/substrings.
+
+# Debian has very specific version string requirements:
 # https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
 
-ver_tmp=$version
-
-# If there's an 'epoch' portion, strip it off, and enable colons to be matched
-# in the upstream-revision portion.
-if epoch=`printf %s "$ver_tmp" | grep -o '^[0-9]\+:'`
+# If there's an 'epoch' portion, strip it off, and allow
+# colons to be matched in the upstream-revision portion.
+if epoch=`printf %s "$version" | grep -o '^[0-9]\+:'`
 then
- ver_tmp=${ver_tmp#"$epoch"}
- colon=:
- unset epoch
-fi
- 
-# If there's a 'debian-revision' portion, strip it off, and enable dashes to be
-# matched in the upstream-revision portion.
-if deb_rev=`printf %s "$ver_tmp" | grep -o -- '-[a-zA-Z0-9+.~]\{1,\}$'`
-then
- ver_tmp=${ver_tmp%"$deb_rev"}
- dash=-
- unset deb_rev
-fi
-
-# Finally, check the upstream-revision portion. : and - are only conditionally
-# allowed based on whether their respective variables were defined above.
-if ! printf %s "$ver_tmp" | grep -q '^[0-9][a-zA-Z0-9+.~'"$colon""$dash"']*$'
-then
- printf '"%s" is not a valid .deb package version.\n' "$version" 1>&2
- exit $err_version
-fi
-
-# If not hard-faking, then we don't want to literally match the package name.
-if $hard
-then
- package=$package_faked
+    version_without_epoch=${version#"$epoch"}
+    colon=:
 else
- package=fkdep-$package_faked
+    version_without_epoch=$version
+    colon=
 fi
 
-# Make new /tmp folder. Assuming mktemp will print its own errors as needed.
-workdir=`mktemp -d /tmp/fkdep.XXXXXX` || exit $err_workdir
+# If there's a 'debian-revision' portion, strip it off, and allow
+# dashes to be matched in the upstream-revision portion.
+if debian_revision=`printf %s "$version_without_epoch"
+                    | grep -o -- '-[a-zA-Z0-9+.~]\{1,\}$'`
+then
+    upstream_revision=${version_without_epoch%"$debian_revision"}
+    dash=-
+else
+    upstream_revision=$version_without_epoch
+    dash=
+fi
+
+# Finally, check the upstream-revision portion. `:` and `-` are only
+# matched if their variables were filled in the prior conditionals.
+if ! printf %s "$upstream_revision" \
+        | grep -q '^[0-9][a-zA-Z0-9+.~'"$colon""$dash"']*$'
+then
+    printf '%s\n' "$0: bad version: $version" 1>&2
+    exit 1
+fi
+
+
+workdir=`mktemp -d /tmp/fkdep.XXXXXX` || exit 1
 
 subdir=$workdir/sub
-mkdir "$subdir" || exit $err_subdir
+mkdir "$subdir" || exit 1
 
-# Using directory first as just a blank directory to generate data.tar.gz
-cd "$subdir"
-tar -czf "$workdir"/data.tar.gz .
+# Using directory first, while it's blank, to generate data.tar.gz
+cd "$subdir" || exit 1
+tar -czf "$workdir"/data.tar.gz . || exit 1
 
-# Now creating the actual DEBIAN files needed.
-cat > "$subdir"/changelog <<DELIM
-$package ($version) unstable; urgency=low
+# Now creating the files needed for control.tar.gz
+cat >"$subdir"/changelog <<CHANGELOG || exit 1
+$package_created ($version) unstable; urgency=low
   * Generated by fkdep!
 
  -- fkdep <fkdep@example.com>  `date -R`
-DELIM
+CHANGELOG
 
-cat > "$subdir"/control <<DELIM
-Source: $package
+cat >"$subdir"/control <<CONTROL || exit 1
+Source: $package_created
 Section: $section
 Priority: extra
 Maintainer: fkdep <fkdep@example.com>
-Package: $package
+Package: $package_created
 Architecture: all
 Version: $version
-Depends: 
-Description: Metapackage pretending to provide package $package_faked
-DELIM
+Description: Metapackage pretending to provide package $package_provided
+CONTROL
+case $package_created in fkdep-"$package_provided")
+    printf 'Provides: %s\n' "$package_provided" >>"$subdir"/control || exit 1
+esac
 
-# If we're not hard-faking, we want to add the "Provides:" line.
-$hard || printf 'Provides: %s\n' $package_faked >> "$subdir"/control
-
-cat > "$subdir"/copyright <<DELIM
-            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-                    Version 2, December 2004
-
- Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>
-
- Everyone is permitted to copy and distribute verbatim or modified
- copies of this license document, and changing it is allowed as long
- as the name is changed.
-
-            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
-   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
-
-  0. You just DO WHAT THE FUCK YOU WANT TO.
-DELIM
+printf '%s\n' \
+  'This is an auto-generated package, so copyright does not' \
+  'apply and it is automatically in the public domain.' \
+   >"$subdir"/copyright || exit 1
 
 # Package the control files, then clean them up.
-tar -czf "$workdir"/control.tar.gz .
-cd "$workdir"
-rm -r "$subdir"
+tar -czf "$workdir"/control.tar.gz . || exit 1
+cd "$workdir" || exit 1
+rm -r "$subdir" || exit 1
 
-printf '2.0\n' > debian-binary
+printf '2.0\n' >debian-binary || exit 1
 
 # Build .deb, emulating the common 'ar' format
-deb=${package}_${version}_all.deb
-touch "$deb"
+deb=${package_created}_${version}_all.deb
+
 # Grab current timestamp
-timestamp=`date +%s -r "$deb"`
+timestamp=`date +%s` || exit 1
 
-printf '!<arch>\n' > $deb
-arAddFile debian-binary
-arAddFile control.tar.gz
-arAddFile data.tar.gz
+printf '!<arch>\n' >"$deb" || exit 1
+ar_add_file debian-binary "$timestamp" >>"$deb" || exit 1
+ar_add_file control.tar.gz "$timestamp" >>"$deb" || exit 1
+ar_add_file data.tar.gz "$timestamp" >>"$deb" || exit 1
 
-rm data.tar.gz control.tar.gz debian-binary
+rm data.tar.gz control.tar.gz debian-binary || exit 1
 
-# Point user to generated deb file.
+# "Return" the path to the generated .deb file
 printf '%s\n' "$workdir"/"$deb"
-return 0
