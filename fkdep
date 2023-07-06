@@ -5,7 +5,7 @@
 
 print_version()
 {
-    printf '%s\n' 'fkdep 3.0.0-alpha'
+    printf '%s\n' 'fkdep 3.0.0'
 }
 
 
@@ -19,18 +19,15 @@ print_help()
         'and has the given package name in its "Provides" field.' \
         '' \
         'Usage:' \
-        '    fkdep [--section=<section>] <package> [<version>]' \
+        '    fkdep <package> [<version>]' \
         '    fkdep (--help | --version)' \
         '' \
         'Options:' \
         '    -h --help               show this help text' \
         '    -V --version            show version information' \
-        '    -s --section=<section>  change the section of the created' \
-        '                            package [default: metapackages]' \
         '' \
         'Errors:' \
         '    need package argument' \
-        '    need section option argument' \
         '    bad option: <option>' \
         '    bad package name: <package>' \
         '    bad version: <version>'
@@ -64,10 +61,6 @@ case $# in 0)
 esac
 
 
-# Defaults:
-section=metapackages
-
-
 case $1 in
 -h | --help)
     print_help || exit 1
@@ -76,20 +69,6 @@ case $1 in
 -V | --version)
     print_version || exit 1
     exit 0
-;;
--s | --section)
-    case $# in 1)
-        printf '%s\n' "$0: need section option argument" 1>&2
-        exit 1
-    esac
-    section=$2
-    shift
-;;
--s*)
-    section=${1#-s}
-;;
---section=*)
-    section=${1#--section=}
 ;;
 -*)
     printf '%s\n' "$0: bad option: $1" 1>&2
